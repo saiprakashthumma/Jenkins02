@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bus Booking</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#f4f4f4;
+}
+
+.container{
+    width:90%;
+    max-width:1100px;
+    margin:30px auto;
+}
+
+header{
+    background:#0077cc;
+    color:white;
+    padding:20px;
+    border-radius:8px;
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.search-box{
+    background:white;
+    padding:20px;
+    border-radius:8px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+    box-shadow:0 3px 10px rgba(0,0,0,.1);
+}
+
+.search-box input,
+.search-box select,
+.search-box button{
+    padding:12px;
+    border-radius:5px;
+    border:1px solid #ccc;
+    font-size:15px;
+}
+
+.search-box button{
+    background:#0077cc;
+    color:white;
+    cursor:pointer;
+    border:none;
+}
+
+.search-box button:hover{
+    background:#005fa3;
+}
+
+.main{
+    display:flex;
+    margin-top:25px;
+    gap:30px;
+}
+
+.bus{
+    flex:2;
+    background:white;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 3px 10px rgba(0,0,0,.1);
+}
+
+.summary{
+    flex:1;
+    background:white;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 3px 10px rgba(0,0,0,.1);
+}
+
+.driver{
+    width:60px;
+    height:40px;
+    background:#444;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    border-radius:5px;
+    margin-bottom:20px;
+}
+
+.seats{
+    display:grid;
+    grid-template-columns:repeat(4,60px);
+    gap:12px 20px;
+}
+
+.seat{
+    width:60px;
+    height:60px;
+    background:#ddd;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    border-radius:8px;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.seat:hover{
+    transform:scale(1.05);
+}
+
+.selected{
+    background:#28a745;
+    color:white;
+}
+
+.booked{
+    background:#e74c3c;
+    color:white;
+    cursor:not-allowed;
+}
+
+.legend{
+    margin-top:20px;
+}
+
+.legend span{
+    display:inline-block;
+    margin-right:15px;
+}
+
+.box{
+    width:15px;
+    height:15px;
+    display:inline-block;
+    margin-right:5px;
+}
+
+.available-box{background:#ddd;}
+.selected-box{background:#28a745;}
+.booked-box{background:#e74c3c;}
+
+.summary h2{
+    margin-bottom:15px;
+}
+
+.summary p{
+    margin:12px 0;
+}
+
+.book-btn{
+    width:100%;
+    padding:15px;
+    margin-top:20px;
+    background:#0077cc;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.book-btn:hover{
+    background:#005fa3;
+}
+
+@media(max-width:850px){
+
+.search-box{
+grid-template-columns:1fr;
+}
+
+.main{
+flex-direction:column;
+}
+
+.seats{
+justify-content:center;
+}
+
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<header>
+<h1>🚌 Online Bus Booking</h1>
+<p>Book your seats in seconds</p>
+</header>
+
+<div class="search-box">
+
+<select>
+<option>Hyderabad</option>
+<option>Vijayawada</option>
+<option>Warangal</option>
+<option>Visakhapatnam</option>
+</select>
+
+<select>
+<option>Vijayawada</option>
+<option>Hyderabad</option>
+<option>Warangal</option>
+<option>Visakhapatnam</option>
+</select>
+
+<input type="date">
+
+<button>Search Bus</button>
+
+</div>
+
+<div class="main">
+
+<div class="bus">
+
+<h2>Select Seats</h2>
+
+<div class="driver">Driver</div>
+
+<div class="seats" id="seatContainer"></div>
+
+<div class="legend">
+<span><span class="box available-box"></span>Available</span>
+<span><span class="box selected-box"></span>Selected</span>
+<span><span class="box booked-box"></span>Booked</span>
+</div>
+
+</div>
+
+<div class="summary">
+
+<h2>Booking Summary</h2>
+
+<p><strong>Selected Seats:</strong></p>
+<p id="selectedSeats">None</p>
+
+<p><strong>Fare Per Seat:</strong> ₹500</p>
+
+<p><strong>Total:</strong></p>
+
+<h2 id="total">₹0</h2>
+
+<button class="book-btn" onclick="bookSeats()">Book Now</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const seatContainer=document.getElementById("seatContainer");
+
+const fare=500;
+
+let selected=[];
+
+// Create 32 seats
+
+for(let i=1;i<=32;i++){
+
+let seat=document.createElement("div");
+
+seat.className="seat";
+
+seat.innerHTML=i;
+
+// Random booked seats
+
+if([4,7,12,18,25,29].includes(i))
+{
+seat.classList.add("booked");
+}
+else
+{
+seat.onclick=function(){
+
+if(seat.classList.contains("selected"))
+{
+seat.classList.remove("selected");
+selected=selected.filter(s=>s!=i);
+}
+else
+{
+seat.classList.add("selected");
+selected.push(i);
+}
+
+updateSummary();
+
+}
+}
+
+seatContainer.appendChild(seat);
+
+}
+
+function updateSummary(){
+
+document.getElementById("selectedSeats").innerHTML=
+selected.length ? selected.join(", ") : "None";
+
+document.getElementById("total").innerHTML=
+"₹"+selected.length*fare;
+
+}
+
+function bookSeats(){
+
+if(selected.length==0){
+
+alert("Please select at least one seat.");
+
+return;
+
+}
+
+alert(
+"Booking Successful!\n\nSeats: "
++selected.join(", ")
++"\nTotal: ₹"+selected.length*fare
+);
+
+location.reload();
+
+}
+
+</script>
+
+</body>
+</html>
